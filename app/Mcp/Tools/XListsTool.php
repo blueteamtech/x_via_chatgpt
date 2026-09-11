@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Arr;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -16,11 +17,11 @@ class XListsTool extends XTool
     {
         $validated = $request->validate([
             'action' => ['required', 'in:list,create,update,delete,add_member,remove_member'],
-            'list_id' => ['nullable', 'string'],
-            'name' => ['nullable', 'string', 'max:25'],
+            'list_id' => ['required_if:action,update,delete,add_member,remove_member', 'nullable', 'string'],
+            'name' => ['required_if:action,create', 'nullable', 'string', 'max:25'],
             'description' => ['nullable', 'string', 'max:100'],
             'private' => ['nullable', 'boolean'],
-            'member_user_id' => ['nullable', 'string'],
+            'member_user_id' => ['required_if:action,add_member,remove_member', 'nullable', 'string'],
         ]);
 
         return $this->respond($request, function ($x) use ($request, $validated) {
@@ -30,21 +31,21 @@ class XListsTool extends XTool
                 'list' => $x->get("/users/{$userId}/owned_lists", [
                     'list.fields' => 'created_at,description,member_count,private,follower_count',
                 ]),
-                'create' => $x->post('/lists', array_filter([
-                    'name' => $validated['name'] ?? 'List',
+                'create' => $x->post('/lists', Arr::whereNotNull([
+                    'name' => $validated['name'],
                     'description' => $validated['description'] ?? null,
                     'private' => $validated['private'] ?? false,
-                ], fn ($value) => $value !== null)),
-                'update' => $x->put('/lists/'.($validated['list_id'] ?? ''), array_filter([
+                ])),
+                'update' => $x->put('/lists/'.$validated['list_id'], Arr::whereNotNull([
                     'name' => $validated['name'] ?? null,
                     'description' => $validated['description'] ?? null,
                     'private' => $validated['private'] ?? null,
-                ], fn ($value) => $value !== null)),
-                'delete' => $x->delete('/lists/'.($validated['list_id'] ?? '')),
-                'add_member' => $x->post('/lists/'.($validated['list_id'] ?? '').'/members', [
-                    'user_id' => $validated['member_user_id'] ?? '',
+                ])),
+                'delete' => $x->delete('/lists/'.$validated['list_id']),
+                'add_member' => $x->post('/lists/'.$validated['list_id'].'/members', [
+                    'user_id' => $validated['member_user_id'],
                 ]),
-                'remove_member' => $x->delete('/lists/'.($validated['list_id'] ?? '').'/members/'.($validated['member_user_id'] ?? '')),
+                'remove_member' => $x->delete('/lists/'.$validated['list_id'].'/members/'.$validated['member_user_id']),
             };
         });
     }

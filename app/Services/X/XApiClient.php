@@ -4,10 +4,12 @@ namespace App\Services\X;
 
 use App\Exceptions\XApiException;
 use App\Models\User;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class XApiClient
 {
@@ -66,13 +68,13 @@ class XApiClient
      */
     protected function send(string $method, string $path, array $payload = []): array
     {
-        $request = $this->http();
+        $request = $this->http($method);
         $path = ltrim($path, '/');
 
         $response = $this->call($request, $method, $path, $payload);
 
         if ($response->status() === 401 && $this->refreshAccessToken()) {
-            $response = $this->call($this->http(), $method, $path, $payload);
+            $response = $this->call($this->http($method), $method, $path, $payload);
         }
 
         return $this->decode($response);
@@ -92,17 +94,29 @@ class XApiClient
         };
     }
 
-    protected function http(): PendingRequest
+    /**
+     * Build an authenticated request for the X API.
+     *
+     * Only reads are replayed on a dropped connection. Replaying a write could
+     * publish a post or send a DM twice, and X never retries usefully on a 4xx,
+     * so HTTP failures are passed straight back to the caller.
+     */
+    protected function http(string $method = 'get'): PendingRequest
     {
         $user = $this->user();
         $this->refreshIfExpiring($user);
 
-        return Http::baseUrl(config('x.api_base'))
+        $request = Http::baseUrl(config('x.api_base'))
             ->withToken((string) $user->x_access_token)
             ->acceptJson()
             ->asJson()
-            ->timeout(30)
-            ->retry(1, 250, throw: false);
+            ->timeout(30);
+
+        if ($method === 'get') {
+            $request->retry(2, 250, fn (Throwable $exception) => $exception instanceof ConnectionException, throw: false);
+        }
+
+        return $request;
     }
 
     protected function refreshIfExpiring(User $user): void
@@ -124,7 +138,7 @@ class XApiClient
 
         try {
             $token = $this->oauth->refresh((string) $user->x_refresh_token);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             Log::warning('X refresh token failed', ['user_id' => $user->id, 'error' => $exception->getMessage()]);
 
             return false;

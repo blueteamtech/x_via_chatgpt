@@ -34,8 +34,21 @@ abstract class XTool extends Tool
 
             return Response::json($result);
         } catch (XApiException $exception) {
-            return Response::error($exception->getMessage());
+            return Response::error($this->errorMessage($exception));
         }
+    }
+
+    /**
+     * Keep X's status code in the error text so the model can tell a rate limit
+     * from a bad argument and decide whether retrying is worth it.
+     */
+    protected function errorMessage(XApiException $exception): string
+    {
+        return match (true) {
+            $exception->status === 429 => 'X rate limit reached — wait before trying again. '.$exception->getMessage(),
+            $exception->status > 0 => "X API error {$exception->status}: {$exception->getMessage()}",
+            default => $exception->getMessage(),
+        };
     }
 
     protected function currentUserId(Request $request): string

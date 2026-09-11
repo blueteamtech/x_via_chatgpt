@@ -16,8 +16,8 @@ class XDirectMessagesTool extends XTool
     {
         $validated = $request->validate([
             'action' => ['required', 'in:list,send'],
-            'participant_id' => ['nullable', 'string'],
-            'text' => ['nullable', 'string', 'max:10000'],
+            'participant_id' => ['required_if:action,send', 'nullable', 'string'],
+            'text' => ['required_if:action,send', 'nullable', 'string', 'max:10000'],
             'max_results' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
@@ -31,8 +31,8 @@ class XDirectMessagesTool extends XTool
             }
 
             return $x->post(
-                '/dm_conversations/with/'.($validated['participant_id'] ?? '').'/messages',
-                ['text' => $validated['text'] ?? ''],
+                '/dm_conversations/with/'.$validated['participant_id'].'/messages',
+                ['text' => $validated['text']],
             );
         });
     }
