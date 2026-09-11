@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +45,16 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * A user who has already connected their X account.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function connectedUser(array $attributes = []): User
 {
-    // ..
+    return User::factory()->create([
+        'x_access_token' => 'test-access-token',
+        'x_token_expires_at' => now()->addHour(),
+        ...$attributes,
+    ]);
 }

@@ -18,8 +18,8 @@ class XReadFeedTool extends XTool
     {
         $validated = $request->validate([
             'view' => ['required', 'in:home,mentions,search,post'],
-            'query' => ['nullable', 'string', 'max:512'],
-            'post_id' => ['nullable', 'string'],
+            'query' => ['required_if:view,search', 'nullable', 'string', 'max:512'],
+            'post_id' => ['required_if:view,post', 'nullable', 'string'],
             'max_results' => ['nullable', 'integer', 'min:5', 'max:100'],
         ]);
 
@@ -42,11 +42,11 @@ class XReadFeedTool extends XTool
                     ...$fields,
                     'max_results' => $max,
                 ]),
-                'post' => $x->get('/tweets/'.($validated['post_id'] ?? ''), $fields),
+                'post' => $x->get('/tweets/'.$validated['post_id'], $fields),
                 'search' => $x->get('/tweets/search/recent', [
                     ...$fields,
-                    'query' => $validated['query'] ?? '',
-                    'max_results' => min($max, 100),
+                    'query' => $validated['query'],
+                    'max_results' => $max,
                 ]),
             };
         });
