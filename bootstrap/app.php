@@ -17,7 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => route('auth.x'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // oauth/authorize is the only OAuth route a human sees, so it must redirect to
+        // Sign in with X rather than return a 401 body ChatGPT cannot act on.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*', 'mcp', 'oauth/*') || $request->expectsJson(),
+            fn (Request $request) => ! $request->is('oauth/authorize')
+                && ($request->is('api/*', 'mcp', 'oauth/*') || $request->expectsJson()),
         );
     })->create();
