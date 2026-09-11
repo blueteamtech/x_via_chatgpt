@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Exceptions\XApiException;
+use App\Rules\NoPrivateIpUrl;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Http;
 use Laravel\Mcp\Request;
@@ -17,7 +18,7 @@ class XUploadMediaTool extends XTool
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
-            'image_url' => ['required', 'url:https'],
+            'image_url' => ['required', 'url:https', new NoPrivateIpUrl()],
         ]);
 
         return $this->respond($request, function ($x) use ($request, $validated) {

@@ -24,10 +24,6 @@ class XAuthController
         $request->session()->put('x_oauth_state', $authorization['state']);
         $request->session()->put('x_oauth_verifier', $authorization['verifier']);
 
-        if (! $request->session()->has('url.intended') && $request->headers->get('referer')) {
-            $request->session()->put('url.intended', $request->headers->get('referer'));
-        }
-
         return redirect()->away($authorization['url']);
     }
 
