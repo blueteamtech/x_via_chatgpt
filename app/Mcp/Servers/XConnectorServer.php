@@ -10,6 +10,7 @@ use App\Mcp\Tools\XListsTool;
 use App\Mcp\Tools\XMeTool;
 use App\Mcp\Tools\XReadFeedTool;
 use App\Mcp\Tools\XSocialTool;
+use App\Mcp\Tools\XSchedulePostTool;
 use App\Mcp\Tools\XUploadMediaTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -31,5 +32,6 @@ class XConnectorServer extends Server
         XListsTool::class,
         XDirectMessagesTool::class,
         XUploadMediaTool::class,
+        XSchedulePostTool::class,
     ];
 }
