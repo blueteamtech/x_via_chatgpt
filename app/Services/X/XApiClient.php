@@ -4,9 +4,12 @@ namespace App\Services\X;
 
 use App\Exceptions\XApiException;
 use App\Models\User;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -63,6 +66,29 @@ class XApiClient
     }
 
     /**
+     * Upload file contents to X as multipart form data.
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    public function upload(string $path, string $contents, string $filename, array $body = []): array
+    {
+        $path = ltrim($path, '/');
+
+        $send = fn (): Response => $this->http('post')
+            ->attach('media', $contents, $filename)
+            ->post($path, $body);
+
+        $response = $send();
+
+        if ($response->status() === 401 && $this->refreshAccessToken()) {
+            $response = $send();
+        }
+
+        return $this->decode($response);
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
@@ -110,10 +136,12 @@ class XApiClient
             ->withToken((string) $user->x_access_token)
             ->acceptJson()
             ->asJson()
+            ->connectTimeout(5)
             ->timeout(30);
 
         if ($method === 'get') {
-            $request->retry(2, 250, fn (Throwable $exception) => $exception instanceof ConnectionException, throw: false);
+            $request->retry(2, 250, fn (Throwable $exception): bool => $exception instanceof ConnectionException
+                || ($exception instanceof RequestException && $exception->response->serverError()), throw: false);
         }
 
         return $request;
@@ -136,10 +164,40 @@ class XApiClient
             return false;
         }
 
+        $staleToken = (string) $user->x_access_token;
+
+        try {
+            return Cache::lock('x-token-refresh:'.$user->getKey(), 15)
+                ->block(10, fn (): bool => $this->exchangeRefreshToken($user, $staleToken));
+        } catch (LockTimeoutException) {
+            Log::warning('X token refresh timed out waiting for the lock', ['user_id' => $user->getKey()]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Trade the refresh token for a fresh access token.
+     *
+     * X invalidates a refresh token the moment it is used, so concurrent tool
+     * calls must not both redeem it — the loser would revoke the winner's brand
+     * new token and sign the user out. This runs behind a lock, and whoever
+     * arrives second finds the access token already rotated and adopts it.
+     */
+    protected function exchangeRefreshToken(User $user, string $staleToken): bool
+    {
+        $user->refresh();
+
+        if ((string) $user->x_access_token !== $staleToken) {
+            $this->user = $user;
+
+            return true;
+        }
+
         try {
             $token = $this->oauth->refresh((string) $user->x_refresh_token);
         } catch (Throwable $exception) {
-            Log::warning('X refresh token failed', ['user_id' => $user->id, 'error' => $exception->getMessage()]);
+            Log::warning('X refresh token failed', ['user_id' => $user->getKey(), 'error' => $exception->getMessage()]);
 
             return false;
         }

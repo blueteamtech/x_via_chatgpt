@@ -6,17 +6,8 @@ use App\Mcp\Tools\XDirectMessagesTool;
 use App\Mcp\Tools\XListsTool;
 use App\Mcp\Tools\XMeTool;
 use App\Mcp\Tools\XReadFeedTool;
-use App\Models\User;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
-
-function connectedUser(): User
-{
-    return User::factory()->create([
-        'x_access_token' => 'test-access-token',
-        'x_token_expires_at' => now()->addHour(),
-    ]);
-}
 
 it('asks for the missing argument instead of calling X with an empty id', function (string $tool, array $arguments, string $missing) {
     Http::fake();
