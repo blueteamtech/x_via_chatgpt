@@ -2,7 +2,6 @@
 
 namespace App\Mcp\Tools;
 
-use App\Jobs\PublishScheduledPost;
 use App\Models\ScheduledPost;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Carbon;
@@ -53,7 +52,7 @@ class XSchedulePostTool extends XTool
             'scheduled_at' => $scheduledAt,
         ]);
 
-        PublishScheduledPost::dispatch($post)->delay($scheduledAt);
+        // Jobs are dispatched by the scheduler every minute — no delay needed here.
 
         return Response::json([
             'scheduled_post_id' => $post->id,
