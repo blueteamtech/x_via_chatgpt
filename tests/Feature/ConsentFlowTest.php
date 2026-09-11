@@ -25,8 +25,35 @@ function authorizeQuery(string $clientId, string $redirectUri): string
     ]);
 }
 
+it('issues a code to ChatGPT without a second consent screen', function () {
+    $redirectUri = 'https://chatgpt.com/connector/oauth/x6Is5t6GEBGm';
+    $client = chatgptClient($redirectUri);
+    $user = User::factory()->create(['username' => 'jess']);
+
+    $response = $this->actingAs($user)
+        ->get('/oauth/authorize?'.authorizeQuery($client->getKey(), $redirectUri));
+
+    $response->assertRedirect();
+    $location = $response->headers->get('Location');
+
+    expect($location)->toStartWith('https://chatgpt.com/connector/oauth/x6Is5t6GEBGm');
+    expect($location)->toContain('code=');
+    expect($location)->toContain('state=chatgpt-state');
+});
+
+it('still asks for consent when the redirect target is not ChatGPT', function () {
+    $redirectUri = 'https://attacker.example/callback';
+    $client = chatgptClient($redirectUri);
+    $user = User::factory()->create(['username' => 'jess']);
+
+    $this->actingAs($user)
+        ->get('/oauth/authorize?'.authorizeQuery($client->getKey(), $redirectUri))
+        ->assertOk()
+        ->assertSee('Connect ChatGPT to X', false);
+});
+
 it('issues an authorization code once the user approves', function () {
-    $redirectUri = 'https://chatgpt.com/connector/oauth/test';
+    $redirectUri = 'https://partner.example/callback';
     $client = chatgptClient($redirectUri);
     $user = User::factory()->create(['username' => 'jess']);
 
@@ -53,7 +80,7 @@ it('issues an authorization code once the user approves', function () {
 });
 
 it('rejects a resubmitted consent form because the token is single use', function () {
-    $redirectUri = 'https://chatgpt.com/connector/oauth/test';
+    $redirectUri = 'https://partner.example/callback';
     $client = chatgptClient($redirectUri);
     $user = User::factory()->create();
 

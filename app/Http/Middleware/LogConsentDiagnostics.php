@@ -24,6 +24,8 @@ class LogConsentDiagnostics
             ? 'empty'
             : substr(hash('sha256', $value), 0, 8);
 
+        $issuedAt = $request->session()->get('authTokenIssuedAt');
+
         $before = [
             'method' => $request->method(),
             'spoofed' => $request->input('_method'),
@@ -35,9 +37,18 @@ class LogConsentDiagnostics
             'user_id' => Auth::id(),
             'via_remember' => Auth::viaRemember(),
             'cookies' => array_keys($request->cookies->all()),
+            'referer' => $request->headers->get('referer'),
+            'sec_fetch_site' => $request->headers->get('sec-fetch-site'),
+            'sec_fetch_mode' => $request->headers->get('sec-fetch-mode'),
+            'sec_fetch_user' => $request->headers->get('sec-fetch-user'),
+            'seconds_since_consent_rendered' => $issuedAt ? round(microtime(true) - (float) $issuedAt, 2) : null,
         ];
 
         $response = $next($request);
+
+        if ($request->isMethod('GET') && $response->getStatusCode() === 200) {
+            $request->session()->put('authTokenIssuedAt', microtime(true));
+        }
 
         Log::warning('consent-diagnostics', $before + [
             'status' => $response->getStatusCode(),

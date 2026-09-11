@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\PassportClient;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
@@ -10,7 +11,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        Passport::useClientModel(PassportClient::class);
     }
 
     public function boot(): void
