@@ -6,6 +6,7 @@ use App\Mcp\Tools\XCreatePostTool;
 use App\Mcp\Tools\XDeletePostTool;
 use App\Mcp\Tools\XDirectMessagesTool;
 use App\Mcp\Tools\XEngageTool;
+use App\Mcp\Tools\XGetTopPostsTool;
 use App\Mcp\Tools\XListsTool;
 use App\Mcp\Tools\XMeTool;
 use App\Mcp\Tools\XReadFeedTool;
@@ -25,6 +26,7 @@ class XConnectorServer extends Server
     protected array $tools = [
         XMeTool::class,
         XReadFeedTool::class,
+        XGetTopPostsTool::class,
         XCreatePostTool::class,
         XDeletePostTool::class,
         XEngageTool::class,
