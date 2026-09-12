@@ -3,6 +3,7 @@
 namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\XCreatePostTool;
+use App\Mcp\Tools\XCreateThreadTool;
 use App\Mcp\Tools\XDeletePostTool;
 use App\Mcp\Tools\XDirectMessagesTool;
 use App\Mcp\Tools\XEngageTool;
@@ -28,6 +29,7 @@ class XConnectorServer extends Server
         XReadFeedTool::class,
         XGetTopPostsTool::class,
         XCreatePostTool::class,
+        XCreateThreadTool::class,
         XDeletePostTool::class,
         XEngageTool::class,
         XSocialTool::class,
