@@ -7,7 +7,7 @@ Living doc. Update as things ship. Delete lines when done.
 - **Product**: functional MVP, used personally by owner. All 14 MCP tools working.
 - **Users**: 1 (owner). No paying customers.
 - **Distribution**: none — connector added manually via URL in ChatGPT Dev Mode.
-- **Pricing**: not set. Recommended $29 Starter / $59 Pro (see below).
+- **Pricing**: not set. Recommended $19 Publisher / $49 Pro, credit-based (see below).
 - **Legal**: no ToS, no Privacy Policy, no billing.
 
 ---
@@ -36,29 +36,47 @@ X killed flat-rate tiers. Everyone is on **pay-per-use**. This shapes everything
 
 ---
 
-## Pricing (two-tier feature-differentiated)
+## Pricing (credit-based, all features both tiers)
 
-Feature differentiation, not volume-gated. Fair-use caps protect margin.
+Two tiers, same features, differ only in monthly credit allowance. Credits self-regulate expensive actions naturally — no artificial feature gates.
 
-### 🌱 Starter — $29/mo ($19/mo annual, -34%)
-- Post + schedule (any depth ahead)
-- Threads any length
-- Longform tweets (if Premium)
-- Your own analytics (last 90 days only)
-- Reply to mentions, send DMs to your followers
-- **Fair use: ~200 posts/mo** (overage: $10 for 200 more)
+### 🌱 Publisher — $19/mo ($15/mo annual, save 21%)
+- **1,000 credits/mo**
+- All features: post, schedule, thread, longform, delete, reply, media, DMs, articles, competitor research, own analytics
+- Capacity: ~500 tweets, OR ~45 link posts, OR ~10 competitor scans, OR any mix
+- Overage: $10 for 500 more credits
 
-### 🔥 Pro — $59/mo ($39/mo annual, -34%)
-Everything in Starter, plus:
-- **Competitor research** — analyze other accounts' top posts (3 scans/mo, $2 each after)
-- **Articles** — draft, publish, manage long-form
-- **Own analytics** — unlimited history (owned reads are cheap)
-- **Priority scheduler**
-- **Fair use: ~600 posts/mo** (overage: $10 for 200 more)
+### 🔥 Pro — $49/mo ($35/mo annual, save 29%)
+- **3,000 credits/mo**
+- Same features as Publisher
+- Capacity: ~1,500 tweets, OR ~135 link posts, OR ~30 competitor scans, OR any mix
+- Overage: $10 for 500 more credits
+
+### Credit values (transparent)
+
+| Action | Credits |
+|---|---|
+| Post (no link) | 2 |
+| Post (with link) | 22 |
+| DM sent | 2 |
+| Reply | 2 |
+| Read own tweet | 1 (bundled per 5) |
+| Read foreign tweet | 1 each |
+| User lookup | 2 |
+| Article publish | 3 |
+| Own analytics scan | 5-30 |
+| Competitor scan (90 days) | 50-100 |
+| Scheduling | 0 (free — cost hits at publish) |
+
+### Multi-account (ghostwriters, agencies)
+
+One XConnect account = one X account = one subscription. Ghostwriters create multiple XConnect accounts (one per client). Ghostwriter with 3 clients = 3 subscriptions = $57-147/mo. Natural agency pricing without building agency features.
+
+Add multi-account-per-user later if 5+ ghostwriters ask.
 
 ### Later (skip for MVP)
-- Power tier ($199/mo) when ghostwriters/agencies show up
-- Multi-account when demanded
+- Higher-tier Enterprise plan when demand appears
+- Multi-account under one login (per-plugin URLs)
 
 ---
 
@@ -127,9 +145,9 @@ Order matters. Ship top-down.
 
 ### Path A — fastest (launch this)
 - [ ] Stripe account activated + Radar on
-- [ ] Payment Link for Starter ($29/mo) + annual ($228/yr)
-- [ ] Payment Link for Pro ($59/mo) + annual ($468/yr)
-- [ ] Overage packs: $10 (200 extra posts), $2 (extra competitor scan)
+- [ ] Payment Link for Publisher ($19/mo) + annual ($180/yr)
+- [ ] Payment Link for Pro ($49/mo) + annual ($420/yr)
+- [ ] Overage pack: $10 for 500 more credits
 - [ ] Stripe Customer Portal enabled
 - [ ] Zapier or manual email after payment → MCP URL + setup
 
@@ -168,9 +186,17 @@ Questions? Reply to this email.
 ## Marketing / GTM strategy
 
 ### Positioning
-> "XConnect: the X-writer's tool that lives in ChatGPT. Built after Hypefury left."
+> "XConnect: the ChatGPT-native way to run your X account."
 
-Hypefury dropped X in August 2026 — their users are actively looking for a replacement.
+**Not competing on price.** OpenTweet ($12), PostWizard ($8) target AI developers and price-shoppers. XConnect targets solo X writers who live in ChatGPT — different market, different value prop, different price.
+
+Hypefury dropped X in August 2026 — their users are actively looking for a replacement. Ride that migration wave.
+
+### Marketing hooks
+- *"Talk to ChatGPT. It runs your X."*
+- *"Stop copy-pasting between ChatGPT and X."*
+- *"Built after Hypefury left. Made for the ChatGPT-first crowd."*
+- *"For X writers who already live in ChatGPT."*
 
 ### Content pillars (post daily on X)
 - **"Today I asked XConnect to..."** — screenshot of ChatGPT convo + resulting post
