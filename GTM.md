@@ -186,17 +186,24 @@ Questions? Reply to this email.
 ## Marketing / GTM strategy
 
 ### Positioning
-> "XConnect: the ChatGPT-native way to run your X account."
+> "XConnect: your X account, run from any AI. ChatGPT, Claude, or Grok — it just works."
 
-**Not competing on price.** OpenTweet ($12), PostWizard ($8) target AI developers and price-shoppers. XConnect targets solo X writers who live in ChatGPT — different market, different value prop, different price.
+**Not competing on price.** OpenTweet ($12), PostWizard ($8) target AI developers and price-shoppers. XConnect targets solo X writers who live in AI chats — different market, different value prop, different price.
+
+**Multi-AI support = biggest differentiator.** Same MCP URL, same subscription, works on:
+- ChatGPT (Developer Mode connectors)
+- Claude.ai (custom connectors, native since Anthropic invented MCP)
+- Grok (Bring Your Own MCP, launched May 2026)
+
+Nobody else in the X SaaS space works across all three.
 
 Hypefury dropped X in August 2026 — their users are actively looking for a replacement. Ride that migration wave.
 
 ### Marketing hooks
-- *"Talk to ChatGPT. It runs your X."*
-- *"Stop copy-pasting between ChatGPT and X."*
-- *"Built after Hypefury left. Made for the ChatGPT-first crowd."*
-- *"For X writers who already live in ChatGPT."*
+- *"Talk to ChatGPT, Claude, or Grok. It runs your X."*
+- *"Stop copy-pasting between your AI and X."*
+- *"Built after Hypefury left. Made for the AI-first crowd."*
+- *"One subscription, three AIs, one X account."*
 
 ### Content pillars (post daily on X)
 - **"Today I asked XConnect to..."** — screenshot of ChatGPT convo + resulting post
@@ -230,6 +237,7 @@ Hypefury dropped X in August 2026 — their users are actively looking for a rep
 ## Product polish (small stuff worth doing)
 
 - [ ] Add `IsDestructive` annotation to: cancel schedule, delete list, block/mute users, delete article
+- [ ] Expand `PassportClient::skipsAuthorization()` trusted domains to include `claude.ai` and `grok.com` (currently only chatgpt.com/chat.openai.com) — otherwise Claude/Grok users see a consent screen on first connect
 - [ ] Verify Cloud DB backups are encrypted
 - [ ] Add retry-once logic to failed scheduled publishes
 - [ ] Article publish requires typed "confirm" (irreversible)
