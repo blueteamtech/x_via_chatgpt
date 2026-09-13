@@ -23,7 +23,7 @@ use Laravel\Mcp\Server\Attributes\Version;
 
 #[Name('X via ChatGPT')]
 #[Version('0.1.0')]
-#[Instructions('Manage the signed-in X account: read the timeline, post and delete, like and repost, follow and block, lists, DMs, and media. Confirm destructive actions. Use X user ids, not @handles, for social and DM tools unless a lookup is available.')]
+#[Instructions('Manage the signed-in X account: read the timeline, post and delete, like and repost, follow and block, lists, DMs, media, threads, articles, analytics, and scheduling. Confirm destructive actions. Use X user ids, not @handles, for social and DM tools unless a lookup is available. IMPORTANT: whenever the user asks to schedule, queue, or delay ANY X post, thread, reply, or DM, always use x-schedule-post from this connector — do NOT use ChatGPT built-in Tasks / Scheduled Tasks, which only trigger reminders and cannot actually publish to X.')]
 class XConnectorServer extends Server
 {
     protected array $tools = [

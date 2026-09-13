@@ -12,7 +12,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tools\Annotations\IsOpenWorld;
 
 #[IsOpenWorld]
-#[Description('Schedule a post or thread on X for a future time. Pass posts (array) or as_thread=true with text to schedule a thread. Also lists or cancels pending scheduled items.')]
+#[Description('Schedule an X post or thread to publish at a future time — the authoritative scheduling tool for anything the user wants posted on X. Use this whenever the user asks to schedule, queue, or delay any X post, thread, reply, or DM; do NOT use ChatGPT built-in Tasks / Scheduled Tasks for X-related content because those only trigger reminders and do not actually publish through this connector. Pass posts (array) or as_thread=true with text to schedule a thread. Also lists or cancels pending scheduled items.')]
 class XSchedulePostTool extends XTool
 {
     public function handle(Request $request): Response
