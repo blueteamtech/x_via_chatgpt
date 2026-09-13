@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\ScheduledPost;
+use App\Services\X\ThreadSplitter;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Carbon;
 use Laravel\Mcp\Request;
@@ -11,7 +12,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tools\Annotations\IsOpenWorld;
 
 #[IsOpenWorld]
-#[Description('Schedule a post to be published on X at a future time, or list/cancel pending scheduled posts.')]
+#[Description('Schedule a post or thread on X for a future time. Pass posts (array) or as_thread=true with text to schedule a thread. Also lists or cancels pending scheduled items.')]
 class XSchedulePostTool extends XTool
 {
     public function handle(Request $request): Response
@@ -28,7 +29,10 @@ class XSchedulePostTool extends XTool
     private function schedule(Request $request): Response
     {
         $validated = $request->validate([
-            'text' => ['required', 'string', 'max:4000'],
+            'text' => ['nullable', 'string', 'max:25000'],
+            'posts' => ['nullable', 'array'],
+            'posts.*' => ['string', 'max:4000'],
+            'as_thread' => ['nullable', 'boolean'],
             'scheduled_at' => ['required', 'string'],
             'reply_to_id' => ['nullable', 'string'],
             'quote_id' => ['nullable', 'string'],
@@ -41,24 +45,58 @@ class XSchedulePostTool extends XTool
             return Response::error('scheduled_at must be in the future.');
         }
 
+        [$text, $threadPosts] = $this->resolveContent($validated);
+
+        if ($text === null && $threadPosts === null) {
+            return Response::error('Pass one of: text (single post), posts array (thread), or text + as_thread=true (auto-split thread).');
+        }
+
         $user = $request->user();
 
         $post = ScheduledPost::create([
             'user_id' => $user->getKey(),
-            'text' => $validated['text'],
+            'text' => $text ?? ($threadPosts[0] ?? ''),
+            'thread_posts' => $threadPosts,
             'reply_to_id' => $validated['reply_to_id'] ?? null,
             'quote_id' => $validated['quote_id'] ?? null,
             'media_ids' => $this->normalizeMediaIds($validated['media_ids'] ?? null),
             'scheduled_at' => $scheduledAt,
         ]);
 
-        // Jobs are dispatched by the scheduler every minute — no delay needed here.
-
         return Response::json([
             'scheduled_post_id' => $post->id,
             'scheduled_at' => $scheduledAt->toIso8601String(),
-            'text' => $post->text,
+            'kind' => $threadPosts !== null ? 'thread' : 'post',
+            'thread_length' => $threadPosts !== null ? count($threadPosts) : 1,
+            'preview' => $threadPosts !== null ? array_slice($threadPosts, 0, 3) : $text,
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array{0: string|null, 1: list<string>|null}
+     */
+    private function resolveContent(array $validated): array
+    {
+        $posts = $validated['posts'] ?? null;
+
+        if (is_array($posts) && $posts !== []) {
+            return [null, array_values($posts)];
+        }
+
+        $text = $validated['text'] ?? null;
+
+        if (! is_string($text) || trim($text) === '') {
+            return [null, null];
+        }
+
+        if (($validated['as_thread'] ?? false) === true) {
+            $splitPosts = app(ThreadSplitter::class)->split($text);
+
+            return $splitPosts === [] ? [null, null] : [null, $splitPosts];
+        }
+
+        return [$text, null];
     }
 
     private function list(Request $request): Response
@@ -69,10 +107,12 @@ class XSchedulePostTool extends XTool
             ->whereNull('published_at')
             ->whereNull('failed_at')
             ->orderBy('scheduled_at')
-            ->get(['id', 'text', 'scheduled_at', 'reply_to_id', 'quote_id', 'media_ids'])
+            ->get(['id', 'text', 'thread_posts', 'scheduled_at', 'reply_to_id', 'quote_id', 'media_ids'])
             ->map(fn (ScheduledPost $post) => [
                 'scheduled_post_id' => $post->id,
-                'text' => $post->text,
+                'kind' => $post->isThread() ? 'thread' : 'post',
+                'thread_length' => $post->isThread() ? count($post->thread_posts) : 1,
+                'preview' => $post->isThread() ? array_slice($post->thread_posts, 0, 3) : $post->text,
                 'scheduled_at' => $post->scheduled_at->toIso8601String(),
                 'reply_to_id' => $post->reply_to_id,
                 'quote_id' => $post->quote_id,
@@ -122,12 +162,14 @@ class XSchedulePostTool extends XTool
     {
         return [
             'action' => $schema->string()->description('schedule | list | cancel')->required(),
-            'text' => $schema->string()->description('Post text (schedule only).'),
+            'text' => $schema->string()->description('Single post text, or long text to auto-split when as_thread=true (schedule only).'),
+            'posts' => $schema->array()->description('Array of post texts to schedule as a thread, in order (schedule only).'),
+            'as_thread' => $schema->boolean()->description('If true and text is provided, auto-split the text into a thread (schedule only).'),
             'scheduled_at' => $schema->string()->description('ISO 8601 datetime in the future (schedule only).'),
-            'reply_to_id' => $schema->string()->description('Post id to reply to (schedule only).'),
-            'quote_id' => $schema->string()->description('Post id to quote (schedule only).'),
-            'media_ids' => $schema->string()->description('Comma-separated media ids from x-upload-media (schedule only).'),
-            'scheduled_post_id' => $schema->integer()->description('Id from x-schedule-post to cancel (cancel only).'),
+            'reply_to_id' => $schema->string()->description('Post id to reply to — attaches the whole thread/post as a reply (schedule only).'),
+            'quote_id' => $schema->string()->description('Post id to quote — single posts only (schedule only).'),
+            'media_ids' => $schema->string()->description('Comma-separated media ids from x-upload-media — single posts only (schedule only).'),
+            'scheduled_post_id' => $schema->integer()->description('Id from list/schedule to cancel (cancel only).'),
         ];
     }
 }

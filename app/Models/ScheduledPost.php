@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'user_id',
     'text',
+    'thread_posts',
     'reply_to_id',
     'quote_id',
     'media_ids',
@@ -26,10 +27,16 @@ class ScheduledPost extends Model
     {
         return [
             'media_ids' => 'array',
+            'thread_posts' => 'array',
             'scheduled_at' => 'datetime',
             'published_at' => 'datetime',
             'failed_at' => 'datetime',
         ];
+    }
+
+    public function isThread(): bool
+    {
+        return is_array($this->thread_posts) && count($this->thread_posts) > 0;
     }
 
     /** @return BelongsTo<User, $this> */

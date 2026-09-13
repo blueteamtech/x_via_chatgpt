@@ -25,6 +25,24 @@ class PublishDueScheduledPostsCommand extends Command
 
     private function publish(XApiClient $x, ScheduledPost $post): void
     {
+        try {
+            if ($post->isThread()) {
+                $this->publishThread($x, $post);
+            } else {
+                $this->publishSingle($x, $post);
+            }
+
+            $post->update(['published_at' => now()]);
+        } catch (XApiException|Throwable $exception) {
+            $post->update([
+                'failed_at' => now(),
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function publishSingle(XApiClient $x, ScheduledPost $post): void
+    {
         $body = ['text' => $post->text];
 
         if (filled($post->reply_to_id)) {
@@ -39,14 +57,32 @@ class PublishDueScheduledPostsCommand extends Command
             $body['media'] = ['media_ids' => array_values((array) $post->media_ids)];
         }
 
-        try {
-            $x->forUser($post->user)->post('/tweets', $body);
-            $post->update(['published_at' => now()]);
-        } catch (XApiException|Throwable $exception) {
-            $post->update([
-                'failed_at' => now(),
-                'error' => $exception->getMessage(),
-            ]);
+        $x->forUser($post->user)->post('/tweets', $body);
+    }
+
+    private function publishThread(XApiClient $x, ScheduledPost $post): void
+    {
+        $client = $x->forUser($post->user);
+        $replyTo = $post->reply_to_id;
+
+        foreach ($post->thread_posts as $index => $text) {
+            $body = ['text' => $text];
+
+            if ($replyTo !== null) {
+                $body['reply'] = ['in_reply_to_tweet_id' => $replyTo];
+            }
+
+            try {
+                $response = $client->post('/tweets', $body);
+            } catch (XApiException $exception) {
+                throw new XApiException(
+                    'Thread stopped at post '.($index + 1).'/'.count($post->thread_posts).': '.$exception->getMessage(),
+                    $exception->status,
+                    $exception->payload,
+                );
+            }
+
+            $replyTo = $response['data']['id'] ?? null;
         }
     }
 }
