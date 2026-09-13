@@ -20,14 +20,18 @@ X killed flat-rate tiers. Everyone is on **pay-per-use**. This shapes everything
 |---|---|
 | Post a tweet (no link) | $0.015 |
 | Post a tweet (with link) | **$0.20** (13x more!) |
+| Send a DM | $0.015 (same as tweet) |
 | Read your own tweet | $0.001 |
 | Read someone else's tweet | $0.005 |
+| Read a DM | $0.005 (each message) |
 | Look up a user | $0.010 |
 
 **Implications:**
 - "Unlimited reads" only safe for OWNED reads (your own account)
 - Foreign reads (competitor research) are expensive — must be capped
 - Link posts are 13x more expensive — must be metered
+- DMs cost same as tweets — fold into fair-use post cap
+- **DM abuse = app ban**: X kills entire apps for DM spam, not just the user
 - Old "Basic $200/mo for 3000 writes" tier no longer exists
 
 ---
@@ -90,15 +94,18 @@ Mathematically prevents losing money on any user.
 
 ## Pre-launch hardening (MUST-DO before any paid customer)
 
+> **Note: not needed yet — owner is still testing solo.** Build these when: (1) inviting first beta users OR (2) opening paid signups. Whichever comes first. Do NOT skip any before charging money.
+
 Order matters. Ship top-down.
 
 - [ ] **Global daily read/write circuit breaker** — pauses tools if app-wide daily spend near budget
-- [ ] **Per-user monthly post cap** — 200 Starter / 600 Pro fair use
+- [ ] **Per-user monthly post cap** — 200 Starter / 600 Pro fair use (DMs count as posts)
 - [ ] **Competitor scan quota** — 3/mo Pro, tracked in DB
 - [ ] **Days_back cap on foreign analytics** — 90d Pro, unlimited on own
 - [ ] **24hr cache on analytics queries** — Redis or DB-backed
 - [ ] **Thread cap: max 25 posts per thread** — prevents 100-tweet catastrophes
 - [ ] **DM daily cap: 20/day per user** — X will ban you for DM spam
+- [ ] **Identical-content DM block** — if same DM text sent to ≥3 recipients in 24hr, reject (existential — protects your whole app from getting banned)
 - [ ] **Subscription active check middleware** — no active sub = tools return "not subscribed"
 - [ ] **`php artisan user:suspend {id}` command** — react fast to abuse
 - [ ] **`x-me` shows current usage** — user can ask "how many posts left this month"
