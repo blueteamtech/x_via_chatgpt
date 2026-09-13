@@ -15,6 +15,7 @@ use App\Mcp\Tools\XReadFeedTool;
 use App\Mcp\Tools\XSchedulePostTool;
 use App\Mcp\Tools\XSocialTool;
 use App\Mcp\Tools\XUploadMediaTool;
+use App\Mcp\Tools\XUserLookupTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -27,6 +28,7 @@ class XConnectorServer extends Server
 {
     protected array $tools = [
         XMeTool::class,
+        XUserLookupTool::class,
         XReadFeedTool::class,
         XGetTopPostsTool::class,
         XCreatePostTool::class,

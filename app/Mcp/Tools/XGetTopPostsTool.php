@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Exceptions\XApiException;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Carbon;
 use Laravel\Mcp\Request;
@@ -12,7 +13,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[IsReadOnly]
 #[IsOpenWorld]
-#[Description('Get the connected user\'s top-performing posts over a date range, sorted by likes, reposts, replies, quotes, bookmarks, impressions, or total engagement.')]
+#[Description('Get top-performing posts over a date range, sorted by likes, reposts, replies, quotes, bookmarks, impressions, or total engagement. Defaults to the connected user; pass a username to analyze any public account.')]
 class XGetTopPostsTool extends XTool
 {
     /**
@@ -37,6 +38,7 @@ class XGetTopPostsTool extends XTool
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
+            'username' => ['nullable', 'string', 'max:15', 'regex:/^@?[A-Za-z0-9_]+$/'],
             'days_back' => ['nullable', 'integer', 'min:1', 'max:365'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
             'sort_by' => ['nullable', 'string', 'in:likes,reposts,replies,quotes,bookmarks,impressions,engagement'],
@@ -49,17 +51,38 @@ class XGetTopPostsTool extends XTool
         $sortBy = $validated['sort_by'] ?? 'engagement';
         $includeReplies = $validated['include_replies'] ?? false;
         $includeReposts = $validated['include_reposts'] ?? false;
+        $username = isset($validated['username']) ? ltrim($validated['username'], '@') : null;
+
+        if ($sortBy === 'impressions' && $username !== null) {
+            return Response::error('Impressions are only available for the connected account. Choose likes, reposts, replies, quotes, bookmarks, or engagement when analyzing another user.');
+        }
 
         $cutoff = Carbon::now()->subDays($daysBack);
 
-        return $this->respond($request, function ($x) use ($request, $cutoff, $limit, $sortBy, $includeReplies, $includeReposts) {
-            $userId = $this->currentUserId($request);
-            $tweets = $this->fetchTweets($x, $userId, $cutoff, $includeReplies, $includeReposts);
+        return $this->respond($request, function ($x) use ($request, $cutoff, $limit, $sortBy, $includeReplies, $includeReposts, $username) {
+            $isSelf = $username === null;
+
+            if ($isSelf) {
+                $userId = $this->currentUserId($request);
+                $resolvedHandle = null;
+            } else {
+                $lookup = $x->get('/users/by/username/'.$username);
+                $userId = $lookup['data']['id'] ?? null;
+
+                if ($userId === null) {
+                    throw new XApiException("Could not find X user @{$username}.");
+                }
+
+                $resolvedHandle = $lookup['data']['username'] ?? $username;
+            }
+
+            $tweets = $this->fetchTweets($x, $userId, $cutoff, $includeReplies, $includeReposts, $isSelf);
 
             $sortField = self::SORT_KEYS[$sortBy];
             usort($tweets, fn (array $a, array $b) => $b[$sortField] <=> $a[$sortField]);
 
             return [
+                'account' => $isSelf ? 'self' : '@'.$resolvedHandle,
                 'sorted_by' => $sortBy,
                 'window_from' => $cutoff->toIso8601String(),
                 'window_to' => now()->toIso8601String(),
@@ -74,7 +97,7 @@ class XGetTopPostsTool extends XTool
      *
      * @return array<int, array<string, mixed>>
      */
-    private function fetchTweets($x, string $userId, Carbon $cutoff, bool $includeReplies, bool $includeReposts): array
+    private function fetchTweets($x, string $userId, Carbon $cutoff, bool $includeReplies, bool $includeReposts, bool $isSelf): array
     {
         $tweets = [];
         $nextToken = null;
@@ -88,10 +111,13 @@ class XGetTopPostsTool extends XTool
             $exclude[] = 'retweets';
         }
 
+        // non_public_metrics is only available for the authenticated user's own tweets.
+        $fields = $isSelf ? 'created_at,public_metrics,non_public_metrics' : 'created_at,public_metrics';
+
         for ($page = 0; $page < self::MAX_PAGES; $page++) {
             $params = [
                 'max_results' => 100,
-                'tweet.fields' => 'created_at,public_metrics,non_public_metrics',
+                'tweet.fields' => $fields,
             ];
 
             if ($exclude !== []) {
@@ -160,6 +186,7 @@ class XGetTopPostsTool extends XTool
     public function schema(JsonSchema $schema): array
     {
         return [
+            'username' => $schema->string()->description('Optional @username to analyze. Omit to analyze the connected account. Impressions are only available for the connected account.'),
             'days_back' => $schema->integer()->description('How many days back to scan (1-365, default 30).'),
             'limit' => $schema->integer()->description('How many top posts to return (1-100, default 20).'),
             'sort_by' => $schema->string()->enum(array_keys(self::SORT_KEYS))->description('Which metric to rank by (default engagement).'),
