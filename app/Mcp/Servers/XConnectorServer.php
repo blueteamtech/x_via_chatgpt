@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Tools\XArticlesTool;
 use App\Mcp\Tools\XCreatePostTool;
 use App\Mcp\Tools\XCreateThreadTool;
 use App\Mcp\Tools\XDeletePostTool;
@@ -37,5 +38,6 @@ class XConnectorServer extends Server
         XDirectMessagesTool::class,
         XUploadMediaTool::class,
         XSchedulePostTool::class,
+        XArticlesTool::class,
     ];
 }
