@@ -22,6 +22,23 @@ class XGetTopPostsTool extends XTool
      */
     private const MAX_PAGES = 40;
 
+    private bool $isForeignScan = false;
+
+    protected function creditCost(): int
+    {
+        $entry = config('credits.costs.XGetTopPostsTool', []);
+
+        if (! is_array($entry)) {
+            return (int) $entry;
+        }
+
+        if (! $this->isForeignScan && isset($entry['actions']['self'])) {
+            return (int) $entry['actions']['self'];
+        }
+
+        return (int) ($entry['default'] ?? 10);
+    }
+
     /**
      * @var array<string, string> sort keys → tweet field they map to
      */
@@ -57,7 +74,14 @@ class XGetTopPostsTool extends XTool
             return Response::error('Impressions are only available for the connected account. Choose likes, reposts, replies, quotes, bookmarks, or engagement when analyzing another user.');
         }
 
+        $foreignMax = (int) config('credits.foreign_analytics_max_days', 180);
+
+        if ($username !== null && $daysBack > $foreignMax) {
+            return Response::error("Foreign account analytics are capped at {$foreignMax} days back to protect API costs. Analyze in shorter windows.");
+        }
+
         $cutoff = Carbon::now()->subDays($daysBack);
+        $this->isForeignScan = $username !== null;
 
         return $this->respond($request, function ($x) use ($request, $cutoff, $limit, $sortBy, $includeReplies, $includeReposts, $username) {
             $isSelf = $username === null;

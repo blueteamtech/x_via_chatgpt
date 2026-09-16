@@ -2,9 +2,13 @@
 
 namespace App\Mcp\Tools;
 
+use App\Exceptions\CircuitBreakerTrippedException;
+use App\Exceptions\CreditsExhaustedException;
 use App\Exceptions\XApiException;
 use App\Models\ToolInvocation;
 use App\Models\User;
+use App\Services\Credits\CircuitBreaker;
+use App\Services\Credits\CreditManager;
 use App\Services\X\XApiClient;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -39,7 +43,14 @@ abstract class XTool extends Tool
         try {
             $result = $callback($this->client($request));
 
+            $this->chargeCredits($user);
+
             return Response::json($result);
+        } catch (CreditsExhaustedException|CircuitBreakerTrippedException $exception) {
+            $success = false;
+            $error = $exception->getMessage();
+
+            return Response::error($exception->getMessage());
         } catch (XApiException $exception) {
             $success = false;
             $error = $exception->getMessage();
@@ -53,6 +64,38 @@ abstract class XTool extends Tool
         } finally {
             $this->recordInvocation($user, $success, $error, (int) ((hrtime(true) - $start) / 1_000_000));
         }
+    }
+
+    /**
+     * Charge the user for a successful tool call. Static per-tool cost is
+     * defined in config/credits.php; individual tools may override
+     * creditCost() to compute dynamic per-invocation costs.
+     */
+    protected function chargeCredits(?User $user): void
+    {
+        if (! $user instanceof User) {
+            return;
+        }
+
+        $credits = $this->creditCost();
+
+        if ($credits <= 0) {
+            return;
+        }
+
+        app(CircuitBreaker::class)->guard($credits);
+        app(CreditManager::class)->charge($user, $credits);
+    }
+
+    /**
+     * Default credit cost = the tool's static cost from config.
+     * Override in subclasses for per-action or per-invocation dynamic costs.
+     */
+    protected function creditCost(): int
+    {
+        $entry = config('credits.costs.'.class_basename(static::class), 0);
+
+        return is_array($entry) ? (int) ($entry['default'] ?? 0) : (int) $entry;
     }
 
     /**

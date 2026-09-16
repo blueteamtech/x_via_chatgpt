@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Services\X\DmGuard;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -9,7 +10,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tools\Annotations\IsOpenWorld;
 
 #[IsOpenWorld]
-#[Description('List recent Direct Messages or send a DM to an X user as the connected account.')]
+#[Description('List recent Direct Messages or send a DM to an X user as the connected account. Daily cap of 20 sends per account (X anti-spam). Identical DMs to multiple recipients are blocked to avoid platform bans.')]
 class XDirectMessagesTool extends XTool
 {
     public function handle(Request $request): Response
@@ -21,7 +22,7 @@ class XDirectMessagesTool extends XTool
             'max_results' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        return $this->respond($request, function ($x) use ($validated) {
+        return $this->respond($request, function ($x) use ($request, $validated) {
             if ($validated['action'] === 'list') {
                 return $x->get('/dm_events', [
                     'max_results' => $validated['max_results'] ?? 20,
@@ -30,10 +31,19 @@ class XDirectMessagesTool extends XTool
                 ]);
             }
 
-            return $x->post(
+            $user = $request->user();
+            $guard = app(DmGuard::class);
+
+            $guard->ensureCanSend($user, $validated['participant_id'], $validated['text']);
+
+            $result = $x->post(
                 '/dm_conversations/with/'.$validated['participant_id'].'/messages',
                 ['text' => $validated['text']],
             );
+
+            $guard->record($user, $validated['participant_id'], $validated['text']);
+
+            return $result;
         });
     }
 

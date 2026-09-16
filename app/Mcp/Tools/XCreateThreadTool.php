@@ -14,6 +14,13 @@ use Laravel\Mcp\Server\Tools\Annotations\IsOpenWorld;
 #[Description('Post a thread on X. Accepts either a pre-split array of post texts, or a single long text that will be auto-split at ~275 char boundaries. Each post replies to the previous one.')]
 class XCreateThreadTool extends XTool
 {
+    private int $creditsForThisCall = 0;
+
+    protected function creditCost(): int
+    {
+        return $this->creditsForThisCall;
+    }
+
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
@@ -32,6 +39,15 @@ class XCreateThreadTool extends XTool
         if ($posts === []) {
             return Response::error('Nothing to post.');
         }
+
+        $threadMax = (int) config('credits.thread_max_posts', 25);
+
+        if (count($posts) > $threadMax) {
+            return Response::error("Thread exceeds the {$threadMax}-post limit. Split it into multiple threads or shorten the text.");
+        }
+
+        $perPost = (int) config('credits.costs.XCreateThreadTool', 2);
+        $this->creditsForThisCall = $perPost * count($posts);
 
         return $this->respond($request, function ($x) use ($posts, $validated) {
             $created = [];

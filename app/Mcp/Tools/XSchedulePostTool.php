@@ -51,6 +51,12 @@ class XSchedulePostTool extends XTool
             return Response::error('Pass one of: text (single post), posts array (thread), or text + as_thread=true (auto-split thread).');
         }
 
+        $threadMax = (int) config('credits.thread_max_posts', 25);
+
+        if ($threadPosts !== null && count($threadPosts) > $threadMax) {
+            return Response::error("Thread exceeds the {$threadMax}-post limit. Shorten the text or split it into two threads.");
+        }
+
         $user = $request->user();
 
         $post = ScheduledPost::create([
