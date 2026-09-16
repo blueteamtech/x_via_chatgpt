@@ -25,6 +25,7 @@
 
     @auth
         <p>Signed in as <strong>{{ '@'.(auth()->user()->username ?: auth()->user()->name) }}</strong>.</p>
+        <p><a class="button" href="{{ route('subscribe') }}">Manage subscription</a></p>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit">Sign out</button>

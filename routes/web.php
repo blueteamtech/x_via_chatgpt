@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\SubscribeController;
 use App\Http\Controllers\XAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,3 +20,11 @@ Route::get('/login', fn () => redirect()->route('auth.x'))->name('login');
 Route::get('/auth/x', [XAuthController::class, 'redirect'])->name('auth.x');
 Route::get('/auth/x/callback', [XAuthController::class, 'callback'])->name('auth.x.callback');
 Route::post('/logout', [XAuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::get('/subscribe', [SubscribeController::class, 'show'])
+    ->middleware('auth')
+    ->name('subscribe');
+
+// Stripe webhook — CSRF excluded in bootstrap/app.php, verified via signature.
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');
