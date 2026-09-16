@@ -10,6 +10,9 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::view('/privacy', 'legal.privacy')->name('privacy');
+Route::view('/terms', 'legal.terms')->name('terms');
+
 Route::get('/login', fn () => redirect()->route('auth.x'))->name('login');
 
 Route::get('/auth/x', [XAuthController::class, 'redirect'])->name('auth.x');

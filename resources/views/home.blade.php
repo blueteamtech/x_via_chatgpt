@@ -42,6 +42,8 @@
     <code class="box">{{ $callbackUrl }}</code>
 
     <p class="muted">CLI checklist: <code>php artisan x:status</code>. Health: <code>{{ url('/up') }}</code>.</p>
+
+    <p class="muted"><a href="{{ route('privacy') }}">Privacy Policy</a> · <a href="{{ route('terms') }}">Terms of Service</a></p>
 </main>
 </body>
 </html>
