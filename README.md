@@ -126,7 +126,18 @@ Cannot: password/email/2FA, billing, ads manager, Developer Portal.
 
 ## Tests
 
+Before pushing any change, run:
+
 ```bash
-vendor/bin/pint --test
-php artisan test
+composer check
+```
+
+This runs code style (`pint --test`) + all 46 tests. Green = safe to push. Red = fix it first.
+
+Other commands:
+
+```bash
+composer fix    # auto-fix code style issues
+composer test   # run tests only
+composer lint   # check style only
 ```
