@@ -12,6 +12,7 @@ return [
     'tiers' => [
         'publisher' => 1000,
         'pro' => 3000,
+        'power' => 10000,
     ],
 
     /*

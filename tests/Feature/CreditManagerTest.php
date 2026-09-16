@@ -27,6 +27,14 @@ it('caps pro tier at 3000 credits', function () {
     expect(fn () => $manager->charge($user, 2))->toThrow(CreditsExhaustedException::class);
 });
 
+it('caps power tier at 10000 credits', function () {
+    $user = connectedUser(['subscription_tier' => 'power']);
+    $manager = app(CreditManager::class);
+
+    $manager->charge($user, 9999);
+    expect(fn () => $manager->charge($user, 2))->toThrow(CreditsExhaustedException::class);
+});
+
 it('rolls over the counter on a new month', function () {
     $user = connectedUser([
         'subscription_tier' => 'publisher',

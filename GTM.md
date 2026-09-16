@@ -7,7 +7,7 @@ Living doc. Update as things ship. Delete lines when done.
 - **Product**: functional MVP, used personally by owner. All 14 MCP tools working.
 - **Users**: 1 (owner). No paying customers.
 - **Distribution**: none — connector added manually via URL in ChatGPT Dev Mode.
-- **Pricing**: not set. Recommended $19 Publisher / $49 Pro, credit-based (see below).
+- **Pricing**: not set. Recommended $19 Publisher / $49 Pro / $149 Power, credit-based (see below).
 - **Legal**: no ToS, no Privacy Policy, no billing.
 
 ---
@@ -36,21 +36,26 @@ X killed flat-rate tiers. Everyone is on **pay-per-use**. This shapes everything
 
 ---
 
-## Pricing (credit-based, all features both tiers)
+## Pricing (credit-based, all features all tiers)
 
-Two tiers, same features, differ only in monthly credit allowance. Credits self-regulate expensive actions naturally — no artificial feature gates.
+Three tiers, same features, differ only in monthly credit allowance. Credits self-regulate expensive actions naturally — no artificial feature gates.
 
 ### 🌱 Publisher — $19/mo ($15/mo annual, save 21%)
 - **1,000 credits/mo**
-- All features: post, schedule, thread, longform, delete, reply, media, DMs, articles, competitor research, own analytics
-- Capacity: ~500 tweets, OR ~45 link posts, OR ~10 competitor scans, OR any mix
+- ~10 tweets/day plain, OR mix with light research
 - Overage: $10 for 500 more credits
+- For: casual daily writers
 
 ### 🔥 Pro — $49/mo ($35/mo annual, save 29%)
 - **3,000 credits/mo**
-- Same features as Publisher
-- Capacity: ~1,500 tweets, OR ~135 link posts, OR ~30 competitor scans, OR any mix
-- Overage: $10 for 500 more credits
+- ~20 tweets/day, regular link posts, weekly competitor research
+- For: serious solo X writers, ghostwriter with 1 client
+
+### ⚡ Power — $149/mo ($109/mo annual, save 27%)
+- **10,000 credits/mo**
+- 30+ tweets/day, heavy link posting, daily competitor research
+- "I don't want to think about credits"
+- For: ghostwriters with multiple clients, agencies, high-volume solo
 
 ### Credit values (transparent)
 
@@ -147,6 +152,7 @@ Order matters. Ship top-down.
 - [ ] Stripe account activated + Radar on
 - [ ] Payment Link for Publisher ($19/mo) + annual ($180/yr)
 - [ ] Payment Link for Pro ($49/mo) + annual ($420/yr)
+- [ ] Payment Link for Power ($149/mo) + annual ($1,308/yr)
 - [ ] Overage pack: $10 for 500 more credits
 - [ ] Stripe Customer Portal enabled
 - [ ] Zapier or manual email after payment → MCP URL + setup
