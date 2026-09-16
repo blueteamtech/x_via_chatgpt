@@ -72,7 +72,7 @@
     <p>If we make material changes to this policy, we will notify active subscribers by email.</p>
 
     <h2>Contact</h2>
-    <p>Email: <a href="mailto:{{ config('app.support_email', 'support@example.com') }}">{{ config('app.support_email', 'support@example.com') }}</a></p>
+    <p>Email: <a href="mailto:cyberandchill@gmail.com">cyberandchill@gmail.com</a></p>
 </main>
 </body>
 </html>

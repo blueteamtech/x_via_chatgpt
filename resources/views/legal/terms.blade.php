@@ -49,8 +49,8 @@
         <li>You can cancel anytime through the Stripe Customer Portal.</li>
     </ul>
 
-    <h2>Refunds</h2>
-    <p>We offer a 7-day money-back guarantee on your first paid month. After that, subscriptions are non-refundable but you can cancel to prevent future billing. If our service is materially broken and we cannot restore it within a reasonable time, we will offer a pro-rated refund.</p>
+    <h2>No refunds</h2>
+    <p>All subscription payments are non-refundable. You may cancel at any time to prevent future billing, and your access continues until the end of your current billing period.</p>
 
     <h2>No liability for X actions</h2>
     <p>You are responsible for content posted through your X account. XConnect is a tool — you (via your AI assistant) direct all actions. We are not liable for:</p>
@@ -71,7 +71,7 @@
     <p>These terms are governed by the laws of the United States. Disputes will be resolved in the courts of the operator&#39;s jurisdiction.</p>
 
     <h2>Contact</h2>
-    <p>Email: <a href="mailto:{{ config('app.support_email', 'support@example.com') }}">{{ config('app.support_email', 'support@example.com') }}</a></p>
+    <p>Email: <a href="mailto:cyberandchill@gmail.com">cyberandchill@gmail.com</a></p>
 </main>
 </body>
 </html>
