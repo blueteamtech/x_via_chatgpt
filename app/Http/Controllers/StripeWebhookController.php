@@ -8,7 +8,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\StripeClient;
 use Stripe\Webhook;
+use Throwable;
 use UnexpectedValueException;
 
 class StripeWebhookController
@@ -140,18 +142,40 @@ class StripeWebhookController
 
     private function extractPriceId(object $session): ?string
     {
-        // Payment Links deliver line items via the session object.
-        // Different session shapes have priced items at different paths;
-        // check the most common ones.
+        // Stripe does NOT include line_items in webhook payloads by default,
+        // so we look up the subscription (always present for subscription-mode
+        // checkouts, which is what Payment Links create for recurring prices)
+        // and read the price from its first item.
+        $subscriptionId = $session->subscription ?? null;
+
+        if ($subscriptionId) {
+            try {
+                $subscription = $this->stripe()->subscriptions->retrieve($subscriptionId);
+                $priceId = $subscription->items->data[0]->price->id ?? null;
+
+                if ($priceId) {
+                    return $priceId;
+                }
+            } catch (Throwable $e) {
+                Log::warning('stripe.webhook.subscription_lookup_failed', [
+                    'subscription' => $subscriptionId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Fallback for one-off Payment Link checkouts that expand line_items,
+        // and for the "put price_id in metadata" pattern used in some tests.
         if (isset($session->line_items->data[0]->price->id)) {
             return $session->line_items->data[0]->price->id;
         }
 
-        if (isset($session->metadata->price_id)) {
-            return $session->metadata->price_id;
-        }
+        return $session->metadata->price_id ?? null;
+    }
 
-        return null;
+    private function stripe(): StripeClient
+    {
+        return new StripeClient(config('stripe.secret_key'));
     }
 
     private function mapStripeStatus(string $stripeStatus): string
