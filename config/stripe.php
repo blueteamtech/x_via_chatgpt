@@ -44,10 +44,13 @@ return [
     | after creating the Products in Stripe.
     */
 
-    'price_to_tier' => [
-        // 'price_xxxxx' => 'publisher',
-        // 'price_xxxxx' => 'pro',
-        // 'price_xxxxx' => 'power',
-    ],
+    'price_to_tier' => collect([
+        env('STRIPE_PRICE_PUBLISHER_MONTHLY') => 'publisher',
+        env('STRIPE_PRICE_PUBLISHER_ANNUAL') => 'publisher',
+        env('STRIPE_PRICE_PRO_MONTHLY') => 'pro',
+        env('STRIPE_PRICE_PRO_ANNUAL') => 'pro',
+        env('STRIPE_PRICE_POWER_MONTHLY') => 'power',
+        env('STRIPE_PRICE_POWER_ANNUAL') => 'power',
+    ])->filter(fn ($v, $k) => is_string($k) && $k !== '')->all(),
 
 ];
