@@ -55,6 +55,10 @@ function connectedUser(array $attributes = []): User
     return User::factory()->create([
         'x_access_token' => 'test-access-token',
         'x_token_expires_at' => now()->addHour(),
+        // Default to beta so tools work in tests without every case having to
+        // set up a subscription. Tests that verify the subscription gate
+        // itself override this by passing is_beta => false.
+        'is_beta' => true,
         ...$attributes,
     ]);
 }

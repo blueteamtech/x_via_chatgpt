@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\CircuitBreakerTrippedException;
 use App\Exceptions\CreditsExhaustedException;
+use App\Exceptions\SubscriptionRequiredException;
 use App\Exceptions\XApiException;
 use App\Models\ToolInvocation;
 use App\Models\User;
@@ -41,12 +42,14 @@ abstract class XTool extends Tool
         $success = true;
 
         try {
+            $this->ensureSubscribed($user);
+
             $result = $callback($this->client($request));
 
             $this->chargeCredits($user);
 
             return Response::json($result);
-        } catch (CreditsExhaustedException|CircuitBreakerTrippedException $exception) {
+        } catch (SubscriptionRequiredException|CreditsExhaustedException|CircuitBreakerTrippedException $exception) {
             $success = false;
             $error = $exception->getMessage();
 
@@ -64,6 +67,40 @@ abstract class XTool extends Tool
         } finally {
             $this->recordInvocation($user, $success, $error, (int) ((hrtime(true) - $start) / 1_000_000));
         }
+    }
+
+    /**
+     * Block the tool call for users without a valid subscription.
+     * Beta users (grandfathered) and active subscribers pass through.
+     * Individual tools may override skipSubscriptionCheck() to always allow
+     * (e.g. x-me lets users check their own status while blocked).
+     */
+    protected function ensureSubscribed(?User $user): void
+    {
+        if (! $user instanceof User || $this->skipSubscriptionCheck()) {
+            return;
+        }
+
+        if ($user->is_beta) {
+            return;
+        }
+
+        $status = $user->subscription_status;
+
+        if ($status === 'active') {
+            return;
+        }
+
+        throw new SubscriptionRequiredException($status ?? 'not_subscribed');
+    }
+
+    /**
+     * Override in tools that must remain usable regardless of subscription
+     * (e.g. x-me for checking account state).
+     */
+    protected function skipSubscriptionCheck(): bool
+    {
+        return false;
     }
 
     /**

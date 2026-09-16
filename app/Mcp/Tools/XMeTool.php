@@ -13,6 +13,13 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[Description('Get the connected X account: id, name, username, granted OAuth scopes, current subscription tier, and monthly credit usage.')]
 class XMeTool extends XTool
 {
+    protected function skipSubscriptionCheck(): bool
+    {
+        // Always available so users can check their subscription state
+        // even after their access is revoked.
+        return true;
+    }
+
     public function handle(Request $request): Response
     {
         $user = $request->user();

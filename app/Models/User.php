@@ -40,6 +40,9 @@ class User extends Authenticatable implements OAuthenticatable
             'x_refresh_token' => 'encrypted',
             'x_token_expires_at' => 'datetime',
             'x_token_scopes' => 'array',
+            'subscription_started_at' => 'datetime',
+            'credits_reset_at' => 'datetime',
+            'is_beta' => 'boolean',
         ];
     }
 }
