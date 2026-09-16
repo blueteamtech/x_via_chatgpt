@@ -4,7 +4,7 @@ Written 2026-09-15 (before GTM launch). Everything works right now. This is your
 
 ## The "known-good" snapshot
 
-Everything as of today is saved in three places:
+Everything as of today is saved in these places:
 
 | Where | Name | What it is |
 |---|---|---|
@@ -12,6 +12,7 @@ Everything as of today is saved in three places:
 | GitHub branch | `stable/mvp-launch` | Frozen copy that never changes |
 | Laravel Cloud | Deployment `depl-a2bcc000-825a-4a15-a45a-073df80a01e5` | Today's live version on Cloud |
 | Git commit | `d4b7d6c` | The exact commit hash |
+| Database backup | **Point-in-time recovery, 7-day window** | Continuous DB backup via Neon |
 
 If ANY future change breaks the site, use one of the methods below.
 
@@ -55,14 +56,45 @@ Claude will:
 Run this exact command:
 
 ```bash
-cloud deployment:rollback depl-a2bcc000-825a-4a15-a45a-073df80a01e5
+~/.composer/vendor/bin/cloud deployment:rollback depl-a2bcc000-825a-4a15-a45a-073df80a01e5
 ```
 
 Confirms and rolls back.
 
 ---
 
-## What "rollback" does NOT undo
+## Database backup: point-in-time recovery (PITR)
+
+**Your database is continuously backed up** with a 7-day rolling window. You can restore the database to ANY moment in the last 7 days (e.g., "restore to 5 minutes before I ran that bad migration").
+
+**Cost:** ~$1-3/mo included in your database bill (retention_days = 7 is enabled).
+
+### When to use PITR (not the code rollback)
+
+| Problem | Fix |
+|---|---|
+| Bad code broke posting | Code rollback (Method 1 or 2 above) |
+| Bad code AND bad data | Code rollback + PITR restore |
+| Accidentally deleted user data | PITR restore |
+| Bad migration corrupted a table | PITR restore |
+| A user account got wiped | PITR restore |
+
+### How to trigger a PITR restore
+
+**Via Cloud dashboard:**
+1. Go to your database in cloud.laravel.com
+2. Look for **Restore** or **Point-in-time recovery**
+3. Pick the date/time to restore to
+4. Confirm — a new database branch is created at that point in time
+
+**Via Claude:**
+Say: *"Restore the database to [date and time] using PITR"* — Claude can trigger it via the Cloud API.
+
+**Note:** Named snapshots (like `mvp-launch-2026-09-15`) are NOT available on your current DB tier — only continuous PITR is. Continuous is actually better because you can restore to any moment, not just at named save points.
+
+---
+
+## What "code rollback" does NOT undo
 
 Rollback fixes the CODE. It does NOT touch:
 
@@ -90,16 +122,14 @@ Rare but possible. If a bad update added new database columns that the old code 
 
 Anytime, run:
 ```bash
-cloud deployment:list env-a2b7bf82-60ef-4194-92ed-423889e0f386 --json | head
+~/.composer/vendor/bin/cloud deployment:list env-a2b7bf82-60ef-4194-92ed-423889e0f386 --json | head
 ```
 
 Or check in the Cloud dashboard under Deployments — the top one with "Active" is live.
 
 ---
 
-## Snapshot summary card
-
-Print this and keep it somewhere:
+## Summary card (print or bookmark)
 
 ```
 XConnect MVP Launch Snapshot
@@ -107,6 +137,9 @@ Date: 2026-09-15
 Git tag: mvp-launch-v1.0
 Git branch: stable/mvp-launch
 Cloud deploy: depl-a2bcc000-825a-4a15-a45a-073df80a01e5
-Working: all 14 tools, 46 tests pass, both ChatGPT + Claude + Grok compatible
-Rollback: cloud.laravel.com → Deployments → find 2026-09-15 → Rollback
+Database: PITR enabled, 7-day rolling window
+Working: all 14 tools, 46 tests pass, ChatGPT + Claude + Grok compatible
+
+Rollback CODE: cloud.laravel.com → Deployments → find 2026-09-15 → Rollback
+Restore DATA:  cloud.laravel.com → Database → Restore to point in time
 ```
