@@ -12,25 +12,32 @@ Living doc. Delete lines as things ship.
 - **Legal pages live** — `/privacy` and `/terms` served publicly, linked from homepage
 - **Credit system live** — every tool call deducts credits, caps per tier enforced
 - **Subscription gate live** — new users need active sub; you (owner) grandfathered as beta
-- **Cost caps live** — thread limits, DM caps, foreign analytics limits, global circuit breaker all active in production
-- **Admin commands live** — you can `user:suspend`, `user:unsuspend`, `user:tier` from CLI
-- **Multi-AI support confirmed** — same app works on ChatGPT, Claude, and Grok
+- **Cost caps live** — thread limits, DM caps, foreign analytics limits, global circuit breaker
+- **Admin commands live** — `user:suspend`, `user:unsuspend`, `user:tier` from CLI
+- **Multi-AI support confirmed** — ChatGPT, Claude, and Grok
 - **Database backup live** — 7-day point-in-time recovery, ~$1-3/mo
-- **Safety snapshots taken** — git tag `mvp-launch-v1.0`, branch `stable/mvp-launch`, `ROLLBACK.md` guide
-- **CI + local check command** — `composer check` runs pint + 77 tests before every push
+- **Safety snapshots taken** — git tag `mvp-launch-v1.0`, branch `stable/mvp-launch`, `ROLLBACK.md`
+- **CI + local check command** — `composer check` runs pint + 92 tests before every push
+- **Stripe integration live** — 3 tiers × monthly/annual = 6 Payment Links, webhook wired, activates users
+- **Stripe Customer Portal wired** — `/billing` route sends users to Stripe to manage sub
+- **Landing page live** — pitch + 3 tier cards with one-click subscribe (`/start/{tier}/{cadence}`)
+- **`/subscribe` page live** — shows active plan + tier picker
 
 ### 🟡 Do these YOURSELF in dashboards (no code, ~15 min total)
 
-- [ ] **Set X API monthly spend cap: $50** — developer.x.com → billing (blocks API at $50/mo, prevents runaway)
-- [ ] **Bump Cloud alert threshold: $5 → $20** — cloud.laravel.com → billing (avoids spurious alerts once retention kicked in)
-- [ ] **Paste `/privacy` and `/terms` URLs into X Developer Portal** — required for launch (required if you want writes/DMs)
+- [ ] **Set X API monthly spend cap: $50** — developer.x.com → billing
+- [ ] **Bump Cloud alert threshold: $5 → $20** — cloud.laravel.com → billing
+- [ ] **Paste `/privacy` and `/terms` URLs into X Developer Portal**
+- [ ] **Enable Stripe Customer Portal** — dashboard.stripe.com/test/settings/billing/portal → configure switchable tiers → save
+- [ ] **Rotate the test Stripe keys** — they were pasted in chat, best practice to rotate
 
 ### 🟠 Do NEXT (small code, ~1-2 hours each)
 
-- [ ] **Phase 4 — Stripe integration** — need your Stripe API keys, then ~30 min to wire Payment Links
-- [ ] **Landing page** — one-screen: what it is, price, buy button, demo video (~1 hour)
-- [ ] **Onboarding email template** — draft the "welcome, here's your URL" email (~30 min manual, or automate via Zapier)
-- [ ] **Record a demo video** — 60-second screen recording of asking ChatGPT to schedule a thread (~30 min)
+- [ ] **`/manual` page** (~1 hour) — the product's `--help`. All 15 tools grouped, example prompts by intent, per-AI setup, credit costs, FAQ. Highest UX value.
+- [ ] **Credit top-up mechanism** (~30 min) — $10 = 500 credits Stripe Payment Link + webhook handler + link in "credits exhausted" ChatGPT error message
+- [ ] **Landing page polish** (~30 min) — "How it works" 3-step section, link to `/manual`, better demo section
+- [ ] **Onboarding email template** — draft the "welcome, here's your URL" email
+- [ ] **Record a demo video** — 60-second screen recording
 
 ### 🔵 Do LATER (only after 5+ real users)
 
@@ -40,15 +47,30 @@ Living doc. Delete lines as things ship.
 - [ ] `x-feedback` tool for in-ChatGPT feedback
 - [ ] Cross-platform (Bluesky, Threads)
 - [ ] Multi-account per user
-- [ ] Web dashboard for analytics
 - [ ] OpenAI connector directory submission
 
-### 🔴 Actively decide NOT to do yet
+### 🔴 Actively decide NOT to do — MVP-clarified
 
+- **In-app dashboard** — users live in chat; credit balance already in `x-me`, billing already in Stripe portal. Skip.
+- **Credit visualization UI** — moved to `x-me` (already returns tier + usage). No web UI needed.
+- **In-app account settings** — Stripe portal handles it.
 - **Evergreen recycling** — Hypefury killer feature but not MVP
 - **Referral program** — pointless without paying users
 - **Team seats / agency plan** — no demand yet
 - **Complex staging/multi-environment** — over-engineering
+
+### 🌐 Final web footprint (small on purpose)
+
+| Page | Purpose |
+|---|---|
+| `/` | Pitch + pricing + one-click subscribe |
+| `/manual` | Product help / examples (**to build**) |
+| `/subscribe` | Stripe checkout entry |
+| `/billing` | Redirect to Stripe portal |
+| `/privacy` + `/terms` | Legal |
+| `/mcp`, `/oauth/*`, `/auth/x`, `/stripe/webhook` | Plumbing (invisible) |
+
+Everything else lives in chat via ChatGPT/Claude/Grok tools.
 
 ---
 
