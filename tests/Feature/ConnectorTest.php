@@ -5,8 +5,13 @@ use Laravel\Passport\ClientRepository;
 
 uses(RefreshDatabase::class);
 
-it('shows the connector home page', function () {
-    $this->get('/')->assertOk()->assertSee('ChatGPT connector URL', false);
+it('shows the landing page with the connector URL and pricing tiers', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('Publisher')
+        ->assertSee('Pro')
+        ->assertSee('Power')
+        ->assertSee('/mcp', false);
 });
 
 it('exposes the Laravel Cloud health endpoint', function () {
