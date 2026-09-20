@@ -47,7 +47,7 @@
             Signed in as <strong>{{ '@'.(auth()->user()->username ?: auth()->user()->name) }}</strong>
             @if (auth()->user()->subscription_status === 'active')
                 on the <strong>{{ ucfirst(auth()->user()->subscription_tier) }}</strong> plan.
-                <a href="{{ route('subscribe') }}" style="color:#1d9bf0">Manage subscription</a>
+                <a href="{{ route('billing.portal') }}" style="color:#1d9bf0">Manage billing</a>
             @else
                 — pick a plan below to activate.
             @endif

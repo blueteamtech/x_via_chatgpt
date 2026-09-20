@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\StartCheckoutController;
+use App\Http\Controllers\StripePortalController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscribeController;
 use App\Http\Controllers\XAuthController;
@@ -25,6 +26,12 @@ Route::post('/logout', [XAuthController::class, 'logout'])->middleware('auth')->
 Route::get('/subscribe', [SubscribeController::class, 'show'])
     ->middleware('auth')
     ->name('subscribe');
+
+// Send user to Stripe Customer Portal to manage subscription (change card,
+// view invoices, cancel, switch plan).
+Route::get('/billing', StripePortalController::class)
+    ->middleware('auth')
+    ->name('billing.portal');
 
 // One-click subscribe from landing page — signs the user in with X first if needed.
 Route::get('/start/{tier}/{cadence?}', StartCheckoutController::class)

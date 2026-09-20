@@ -33,11 +33,13 @@
 
     @if ($currentStatus === 'active')
         <div class="status">
-            ✓ You're on the <strong>{{ ucfirst($currentTier) }}</strong> plan. Manage your subscription in the Stripe portal.
+            ✓ You're on the <strong>{{ ucfirst($currentTier) }}</strong> plan.
+            <a href="{{ route('billing.portal') }}" style="color:#1d9bf0; font-weight:600">Manage subscription →</a>
         </div>
     @elseif ($currentStatus === 'past_due')
         <div class="status">
-            ⚠️ Your subscription payment failed. Update your card in Stripe to restore access.
+            ⚠️ Your subscription payment failed.
+            <a href="{{ route('billing.portal') }}" style="color:#1d9bf0; font-weight:600">Update your card →</a>
         </div>
     @elseif ($currentStatus === 'cancelled')
         <div class="status">
@@ -99,7 +101,7 @@
     </div>
 
     <p class="muted" style="margin-top:2rem">
-        Payments are handled by Stripe. Signed in as <strong>@{{ $user->username ?: $user->name }}</strong>.
+        Payments are handled by Stripe. Signed in as <strong>{{ '@'.($user->username ?: $user->name) }}</strong>.
         <a href="{{ route('privacy') }}" style="color:#7a8898">Privacy</a> ·
         <a href="{{ route('terms') }}" style="color:#7a8898">Terms</a>
     </p>
