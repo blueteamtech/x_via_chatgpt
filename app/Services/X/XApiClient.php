@@ -113,11 +113,26 @@ class XApiClient
     {
         return match ($method) {
             'get' => $request->get($path, $payload),
-            'post' => $request->post($path, $payload),
-            'put' => $request->put($path, $payload),
+            'post' => $this->sendJsonBody($request, 'post', $path, $payload),
+            'put' => $this->sendJsonBody($request, 'put', $path, $payload),
             'delete' => $payload === [] ? $request->delete($path) : $request->withQueryParameters($payload)->delete($path),
             default => throw new XApiException("Unsupported HTTP method [{$method}]."),
         };
+    }
+
+    /**
+     * X rejects a JSON body that isn't an object. PHP encodes empty arrays as
+     * '[]', so we force an empty payload to serialize as '{}' before sending.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function sendJsonBody(PendingRequest $request, string $method, string $path, array $payload): Response
+    {
+        if ($payload === []) {
+            return $request->withBody('{}', 'application/json')->{$method}($path);
+        }
+
+        return $request->{$method}($path, $payload);
     }
 
     /**
